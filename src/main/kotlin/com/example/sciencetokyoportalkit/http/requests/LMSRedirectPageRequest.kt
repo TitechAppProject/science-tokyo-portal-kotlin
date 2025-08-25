@@ -1,11 +1,11 @@
-package com.example.sciencetokyoportalkit.http.requests
+package app.titech.sciencetokyoportalkit.http.requests
 
-import com.example.sciencetokyoportalkit.http.BaseURL
-import com.example.sciencetokyoportalkit.http.HTTPMethod
-import com.example.sciencetokyoportalkit.http.HTTPRequest
-import com.example.sciencetokyoportalkit.http.LMSBaseURL
-import com.example.sciencetokyoportalkit.model.HTMLInput
-import com.example.sciencetokyoportalkit.model.HTMLMeta
+import app.titech.sciencetokyoportalkit.http.BaseURL
+import app.titech.sciencetokyoportalkit.http.HTTPMethod
+import app.titech.sciencetokyoportalkit.http.HTTPRequest
+import app.titech.sciencetokyoportalkit.http.LMSBaseURL
+import app.titech.sciencetokyoportalkit.model.HTMLInput
+import app.titech.sciencetokyoportalkit.model.HTMLMeta
 
 class LMSRedirectPageRequest(
     htmlInputs: List<HTMLInput>,

@@ -1,6 +1,6 @@
-package com.example.sciencetokyoportalkit
+package app.titech.sciencetokyoportalkit
 
-import com.example.sciencetokyoportalkit.model.ScienceTokyoPortalAccount
+import app.titech.sciencetokyoportalkit.model.ScienceTokyoPortalAccount
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 

@@ -1,4 +1,4 @@
-package com.example.sciencetokyoportalkit.utility
+package app.titech.sciencetokyoportalkit.utility
 
 fun base32Decode(base32String: String): ByteArray? {
     val base32Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"

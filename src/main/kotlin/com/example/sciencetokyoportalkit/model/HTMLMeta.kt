@@ -1,4 +1,4 @@
-package com.example.sciencetokyoportalkit.model
+package app.titech.sciencetokyoportalkit.model
 
 data class HTMLMeta(
     val name: String,

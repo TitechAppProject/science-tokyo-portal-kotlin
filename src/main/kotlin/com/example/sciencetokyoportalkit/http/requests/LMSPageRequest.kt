@@ -1,8 +1,8 @@
-package com.example.sciencetokyoportalkit.http.requests
+package app.titech.sciencetokyoportalkit.http.requests
 
-import com.example.sciencetokyoportalkit.http.HTTPMethod
-import com.example.sciencetokyoportalkit.http.HTTPRequest
-import com.example.sciencetokyoportalkit.http.LMSBaseURL
+import app.titech.sciencetokyoportalkit.http.HTTPMethod
+import app.titech.sciencetokyoportalkit.http.HTTPRequest
+import app.titech.sciencetokyoportalkit.http.LMSBaseURL
 
 class LMSPageRequest : HTTPRequest {
     override val url = LMSBaseURL.origin

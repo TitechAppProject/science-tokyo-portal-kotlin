@@ -1,4 +1,4 @@
-package com.example.sciencetokyoportalkit.utility
+package app.titech.sciencetokyoportalkit.utility
 
 const val UP = 0x01
 const val UV = 0x04

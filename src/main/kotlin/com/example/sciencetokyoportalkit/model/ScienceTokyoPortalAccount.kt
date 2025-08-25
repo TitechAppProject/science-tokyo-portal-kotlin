@@ -1,4 +1,4 @@
-package com.example.sciencetokyoportalkit.model
+package app.titech.sciencetokyoportalkit.model
 
 data class ScienceTokyoPortalAccount(
     val username: String,

@@ -1,4 +1,4 @@
-package com.example.sciencetokyoportalkit.model
+package app.titech.sciencetokyoportalkit.model
 
 sealed class ScienceTokyoPortalLoginError : Exception() {
     object InvalidUserNamePage : ScienceTokyoPortalLoginError()
