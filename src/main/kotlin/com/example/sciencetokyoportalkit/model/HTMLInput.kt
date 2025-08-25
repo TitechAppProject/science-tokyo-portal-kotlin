@@ -1,4 +1,4 @@
-package com.example.sciencetokyoportalkit.model
+package app.titech.sciencetokyoportalkit.model
 
 enum class HTMLInputType(val value: String) {
     TEXT("text"),

@@ -1,8 +1,8 @@
-package com.example.sciencetokyoportalkit.http.requests
+package app.titech.sciencetokyoportalkit.http.requests
 
-import com.example.sciencetokyoportalkit.http.BaseURL
-import com.example.sciencetokyoportalkit.http.HTTPMethod
-import com.example.sciencetokyoportalkit.http.HTTPRequest
+import app.titech.sciencetokyoportalkit.http.BaseURL
+import app.titech.sciencetokyoportalkit.http.HTTPMethod
+import app.titech.sciencetokyoportalkit.http.HTTPRequest
 
 class UserNamePageRequest : HTTPRequest {
     override val url = "${BaseURL.origin}/auth/session"

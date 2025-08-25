@@ -1,4 +1,4 @@
-package com.example.sciencetokyoportalkit.utility
+package app.titech.sciencetokyoportalkit.utility
 
 import java.nio.ByteBuffer
 import java.util.*

@@ -1,9 +1,9 @@
-package com.example.sciencetokyoportalkit
+package app.titech.sciencetokyoportalkit
 
-import com.example.sciencetokyoportalkit.http.*
-import com.example.sciencetokyoportalkit.http.requests.*
-import com.example.sciencetokyoportalkit.model.*
-import com.example.sciencetokyoportalkit.utility.calculateTOTP
+import app.titech.sciencetokyoportalkit.http.*
+import app.titech.sciencetokyoportalkit.http.requests.*
+import app.titech.sciencetokyoportalkit.model.*
+import app.titech.sciencetokyoportalkit.utility.calculateTOTP
 import kotlinx.serialization.json.*
 import org.jsoup.Jsoup
 import java.net.HttpCookie

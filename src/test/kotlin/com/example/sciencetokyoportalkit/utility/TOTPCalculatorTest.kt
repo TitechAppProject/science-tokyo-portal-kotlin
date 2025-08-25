@@ -1,4 +1,4 @@
-package com.example.sciencetokyoportalkit.utility
+package app.titech.sciencetokyoportalkit.utility
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows

@@ -1,4 +1,4 @@
-package com.example.sciencetokyoportalkit.http
+package app.titech.sciencetokyoportalkit.http
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

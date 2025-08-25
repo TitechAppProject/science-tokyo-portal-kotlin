@@ -1,6 +1,6 @@
-package com.example.sciencetokyoportalkit
+package app.titech.sciencetokyoportalkit
 
-import com.example.sciencetokyoportalkit.model.*
+import app.titech.sciencetokyoportalkit.model.*
 import org.junit.jupiter.api.Test
 import java.net.HttpCookie
 import kotlin.test.assertEquals
