@@ -151,6 +151,8 @@ class ScienceTokyoPortal(
         
         return validateSubmitStatusCode(passwordPageSubmitStatusCode)
     }
+
+    fun currentCookies(): List<HttpCookie> = httpClient.cookies()
     
     private suspend fun fetchUserNamePage(): String {
         val request = UserNamePageRequest()
