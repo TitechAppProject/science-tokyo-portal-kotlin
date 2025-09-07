@@ -36,6 +36,7 @@ class HTTPClientImpl(
             println("Method: " + connection.requestMethod.toString())
             println("RequestHeaders: " + connection.requestProperties.toString())
             println("RequestBody: " + request.body.toString())
+            connection.doOutput = request.body != null && connection.requestMethod == "POST"
             connection.connect()
 
             if (request.body != null && connection.requestMethod == "POST") {
