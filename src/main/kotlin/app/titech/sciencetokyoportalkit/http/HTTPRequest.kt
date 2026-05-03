@@ -3,8 +3,13 @@ package app.titech.sciencetokyoportalkit.http
 import kotlinx.serialization.json.JsonObject
 
 object BaseURL {
-    const val origin = "https://isct.ex-tic.com"
-    const val host = "isct.ex-tic.com"
+    var origin = "https://isct.ex-tic.com"
+    var host = "isct.ex-tic.com"
+
+    fun changeToMock() {
+        origin = "https://extic-mock.isct.app"
+        host = "extic-mock.isct.app"
+    }
 }
 
 object LMSBaseURL {

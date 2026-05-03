@@ -14,6 +14,15 @@ class ScienceTokyoPortal(
 ) {
     companion object {
         const val DEFAULT_USER_AGENT = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1"
+
+        /**
+         * 接続先をモックサーバ (https://extic-mock.isct.app) に切り替える。
+         * 開発時のテストアカウントによるログイン経路用。
+         * 一度呼ぶとプロセス終了まで mock URL に向き続ける。
+         */
+        fun changeToMock() {
+            BaseURL.changeToMock()
+        }
     }
     
     private val httpClient: HTTPClient = HTTPClientImpl(userAgent)
