@@ -15,7 +15,7 @@ publishing {
         create<MavenPublication>("maven") {
             groupId = "app.titech"
             artifactId = "science-tokyo-portal"
-            version = "1.5.0"
+            version = "1.6.0"
 
             from(components["java"])
 

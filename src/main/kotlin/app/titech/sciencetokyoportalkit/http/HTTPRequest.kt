@@ -13,8 +13,13 @@ object BaseURL {
 }
 
 object LMSBaseURL {
-    const val origin = "https://lms.s.isct.ac.jp/2025/"
-    const val host = "lms.s.isct.ac.jp"
+    var origin = "https://lms.s.isct.ac.jp/2025/"
+    var host = "lms.s.isct.ac.jp"
+
+    fun changeToMock() {
+        origin = "https://extic-mock.isct.app/2025/"
+        host = "extic-mock.isct.app"
+    }
 }
 
 enum class HTTPMethod(val value: String) {
