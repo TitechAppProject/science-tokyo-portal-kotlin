@@ -18,10 +18,12 @@ class ScienceTokyoPortal(
         /**
          * 接続先をモックサーバ (https://extic-mock.isct.app) に切り替える。
          * 開発時のテストアカウントによるログイン経路用。
+         * Extic SSO と LMS 双方を mock に向ける。
          * 一度呼ぶとプロセス終了まで mock URL に向き続ける。
          */
         fun changeToMock() {
             BaseURL.changeToMock()
+            LMSBaseURL.changeToMock()
         }
     }
     
