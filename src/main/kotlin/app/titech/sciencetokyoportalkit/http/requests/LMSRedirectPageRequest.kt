@@ -26,7 +26,7 @@ class LMSRedirectPageRequest(
             "Connection" to "keep-alive",
             "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
             "Content-Type" to "application/x-www-form-urlencoded; charset=UTF-8",
-            "Accept-Encoding" to "br, gzip, deflate",
+            "Accept-Encoding" to "gzip",
             "Accept-Language" to "ja",
             "Sec-Fetch-Dest" to "document",
             "Sec-Fetch-Mode" to "navigate",

@@ -14,7 +14,7 @@ class WaitingPageRequest(
         "Origin" to BaseURL.origin,
         "Connection" to "keep-alive",
         "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Encoding" to "br, gzip, deflate",
+        "Accept-Encoding" to "gzip",
         "Accept-Language" to "ja",
         "Sec-Fetch-Dest" to "document",
         "Sec-Fetch-Mode" to "navigate",

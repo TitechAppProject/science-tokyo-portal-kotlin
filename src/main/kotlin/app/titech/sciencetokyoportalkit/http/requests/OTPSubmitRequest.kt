@@ -23,7 +23,7 @@ class OTPSubmitRequest(
             "Connection" to "keep-alive",
             "Content-Type" to "application/x-www-form-urlencoded; charset=UTF-8",
             "Accept" to "*/*;q=0.5, text/javascript, application/javascript, application/ecmascript, application/x-ecmascript",
-            "Accept-Encoding" to "br, gzip, deflate",
+            "Accept-Encoding" to "gzip",
             "Accept-Language" to "ja",
             "Sec-Fetch-Dest" to "empty",
             "Sec-Fetch-Mode" to "cors",

@@ -10,7 +10,7 @@ class LMSPageRequest : HTTPRequest {
     override val headerFields = mapOf(
         "Connection" to "keep-alive",
         "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Encoding" to "br, gzip, deflate",
+        "Accept-Encoding" to "gzip",
         "Accept-Language" to "ja-jp"
     )
 }
