@@ -24,7 +24,7 @@ class PasswordSubmitRequest(
             "Connection" to "keep-alive",
             "Content-Type" to "application/x-www-form-urlencoded; charset=UTF-8",
             "Accept" to "application/json, text/javascript, */*; q=0.01",
-            "Accept-Encoding" to "br, gzip, deflate",
+            "Accept-Encoding" to "gzip",
             "Accept-Language" to "ja",
             "Sec-Fetch-Dest" to "empty",
             "Sec-Fetch-Mode" to "cors",

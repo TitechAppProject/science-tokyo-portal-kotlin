@@ -28,7 +28,7 @@ class UserNameSubmitRequest(
             "Origin" to BaseURL.origin,
             "Connection" to "keep-alive",
             "Accept" to "application/json, text/javascript, */*; q=0.01",
-            "Accept-Encoding" to "br, gzip, deflate",
+            "Accept-Encoding" to "gzip",
             "Accept-Language" to "ja",
             "Sec-Fetch-Dest" to "empty",
             "Sec-Fetch-Mode" to "cors",

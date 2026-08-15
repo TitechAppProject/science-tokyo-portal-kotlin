@@ -3,12 +3,14 @@ package app.titech.sciencetokyoportalkit.http
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.BufferedReader
+import java.io.InputStream
 import java.io.InputStreamReader
 import java.io.PrintStream
 import java.net.HttpCookie
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
+import java.util.zip.GZIPInputStream
 import kotlin.collections.flatMap
 
 interface HTTPClient {
@@ -91,7 +93,7 @@ class HTTPClientImpl(
         } while (needRedirect)
 
         try {
-            val br = BufferedReader(InputStreamReader(connection.inputStream))
+            val br = BufferedReader(InputStreamReader(decodedStream(connection)))
 
             val sb = StringBuilder()
 
@@ -100,8 +102,6 @@ class HTTPClientImpl(
             }
 
             br.close()
-
-            connection.inputStream.close()
 
             HTTPResponse(
                 sb.toString(),
@@ -123,6 +123,17 @@ class HTTPClientImpl(
 
     override fun cookies(): List<HttpCookie> = cookies.toList()
 
+    /// Accept-Encodingを明示的に指定しているため、gzipの透過的な解凍は行われない。
+    /// Content-Encodingを見て自前で解凍する。
+    private fun decodedStream(connection: HttpURLConnection): InputStream {
+        val stream = connection.inputStream
+
+        return if (connection.contentEncoding?.equals("gzip", ignoreCase = true) == true) {
+            GZIPInputStream(stream)
+        } else {
+            stream
+        }
+    }
 
     private fun generateUrlConnection(
         url: URL,
