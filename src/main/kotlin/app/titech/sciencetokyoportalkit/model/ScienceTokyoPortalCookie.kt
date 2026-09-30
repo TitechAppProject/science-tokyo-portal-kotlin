@@ -20,4 +20,6 @@ data class ScienceTokyoPortalCookie(
     val path: String,
     val secure: Boolean,
     val httpOnly: Boolean,
+    /** 有効期限 (UNIX 時間のミリ秒)。Max-Age・Expires 属性が無いセッション Cookie なら null */
+    val expiresAt: Long?,
 )

@@ -172,8 +172,8 @@ class ScienceTokyoPortal(
 
     /**
      * ログインで受け取った Cookie。
-     * ホストだけの Cookie は domain に受け取ったホスト名を、Domain 属性のある Cookie は domain に `.` 付きの値を入れる。
-     * 有効期限は入らない。
+     * 以前と同じくホストだけの Cookie でも domain に受け取ったホスト名が入るので、ホストだけの Cookie かは区別できない。
+     * Domain 属性のある Cookie の domain は先頭の `.` を除いたもの。有効期限は入らない。
      */
     @Deprecated(
         "ホストだけの Cookie かを hostOnly で判別できる currentPortalCookies() を使う",

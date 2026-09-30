@@ -16,9 +16,15 @@ class HTTPClientImplTest {
         createContext("/") { exchange ->
             when (exchange.requestURI.path) {
                 "/auth/session" -> {
+                    exchange.responseHeaders.add("Set-Cookie", "SESSION=old")
                     exchange.responseHeaders.add("Set-Cookie", "SESSION=host-only")
                     exchange.responseHeaders.add("Set-Cookie", "ROOT=1; Path=/")
                     exchange.responseHeaders.add("Set-Cookie", "SECURE=1; Path=/; Secure")
+                    exchange.responseHeaders.add("Location", "http://127.0.0.1:${exchange.localAddress.port}/set")
+                    exchange.sendResponseHeaders(302, -1)
+                }
+                "/set" -> {
+                    exchange.responseHeaders.add("Set-Cookie", "OTHER=1; Path=/")
                     exchange.responseHeaders.add("Location", "http://127.0.0.1:${exchange.localAddress.port}/echo")
                     exchange.sendResponseHeaders(302, -1)
                 }
@@ -48,17 +54,22 @@ class HTTPClientImplTest {
     fun `Cookie は送り先のホストと path に合うものだけを付ける`() = runBlocking {
         val client = HTTPClientImpl("test")
 
-        // リダイレクト先の 127.0.0.1 には localhost の Cookie を付けない
+        // リダイレクト先の 127.0.0.1 には、そこで受け取った Cookie だけを付け、localhost の Cookie は付けない
         val redirected = client.send(Get("http://localhost:$port/auth/session"))
         assertEquals("http://127.0.0.1:$port/echo", redirected.responseUrl)
-        assertEquals("", redirected.html)
+        assertEquals("OTHER=1", redirected.html)
 
-        // JDK 17 までの HttpURLConnection は同じヘッダの値を逆順で返すので、受け取った順は比べない
+        // 同じ Cookie が 1 つのレスポンスに複数あれば後のものを使う (受け取った順を保つ)
         assertEquals(
-            setOf("SESSION" to "/auth", "ROOT" to "/", "SECURE" to "/"),
-            client.cookies().map { it.name to it.path }.toSet()
+            listOf(
+                Triple("localhost", "SESSION", "host-only"),
+                Triple("localhost", "ROOT", "1"),
+                Triple("localhost", "SECURE", "1"),
+                Triple("127.0.0.1", "OTHER", "1"),
+            ),
+            client.cookies().map { Triple(it.domain, it.name, it.value) }
         )
-        assertEquals(listOf(true, true, true), client.cookies().map { it.hostOnly })
+        assertEquals(listOf(true, true, true, true), client.cookies().map { it.hostOnly })
         assertEquals("SESSION=host-only; ROOT=1", client.send(Get("http://localhost:$port/auth/echo")).html)
         assertEquals("ROOT=1", client.send(Get("http://localhost:$port/echo")).html)
     }

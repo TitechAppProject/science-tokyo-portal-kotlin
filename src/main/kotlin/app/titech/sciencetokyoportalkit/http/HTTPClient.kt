@@ -54,11 +54,7 @@ class HTTPClientImpl(
             println("responseHeaders: " + connection.headerFields.toString())
             println("responseCode: " + connection.responseCode.toString())
 
-            val setCookie = connection.headerFields
-                .filterKeys { it != null && it.equals("Set-Cookie", ignoreCase = true) }
-                .values
-                .flatten()
-            cookieStore.store(setCookie, connection.url)
+            cookieStore.store(setCookieHeaders(connection), connection.url)
 
             var needRedirect = false
             if (connection.responseCode in 300..399) {
@@ -108,6 +104,17 @@ class HTTPClientImpl(
     }
 
     override fun cookies(): List<ScienceTokyoPortalCookie> = cookieStore.all()
+
+    /// Set-Cookie ヘッダの値を受け取った順に返す。
+    /// JDK 17 までの headerFields は同じ名前のヘッダの値を逆順で返すので、番号で 1 つずつ読む。
+    /// 0 番目はステータス行 (キーは null)。
+    private fun setCookieHeaders(connection: HttpURLConnection): List<String> =
+        generateSequence(0) { it + 1 }
+            .map { connection.getHeaderFieldKey(it) to connection.getHeaderField(it) }
+            .takeWhile { (_, value) -> value != null }
+            .filter { (key, _) -> key != null && key.equals("Set-Cookie", ignoreCase = true) }
+            .mapNotNull { (_, value) -> value }
+            .toList()
 
     /// Accept-Encodingを明示的に指定しているため、gzipの透過的な解凍は行われない。
     /// Content-Encodingを見て自前で解凍する。

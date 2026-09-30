@@ -18,8 +18,6 @@ internal class CookieStore(
 ) {
     private class Entry(
         val cookie: ScienceTokyoPortalCookie,
-        /** null なら期限の無い (セッション) Cookie */
-        val expiresAt: Long?,
         /** 最初に受け取った順。上書きしても変えない (RFC 6265 5.3 の creation-time) */
         val creationOrder: Long,
     )
@@ -27,20 +25,33 @@ internal class CookieStore(
     private val entries = mutableListOf<Entry>()
     private var nextCreationOrder = 0L
 
-    /** [url] へのリクエストのレスポンスで受け取った Set-Cookie ヘッダの値を取り込む */
+    /** [url] へのリクエストのレスポンスで受け取った Set-Cookie ヘッダの値を、受け取った順に取り込む */
     @Synchronized
     fun store(setCookieHeaders: List<String>, url: URL) {
         val now = currentTimeMillis()
-        setCookieHeaders
-            .flatMap { header -> runCatching { HttpCookie.parse(header) }.getOrDefault(emptyList()) }
-            .forEach { store(it, url, now) }
+        setCookieHeaders.forEach { header ->
+            val maxAge = maxAgeAttribute(header)
+            runCatching { HttpCookie.parse(header) }
+                .getOrDefault(emptyList())
+                .forEach { store(it, maxAge, url, now) }
+        }
     }
 
-    private fun store(parsed: HttpCookie, url: URL, now: Long) {
+    private fun store(parsed: HttpCookie, maxAgeAttribute: Long?, url: URL, now: Long) {
         val host = url.host.lowercase()
         // HttpCookie.parse は Domain 属性が無ければ null にし、値は先頭の . の有無も含めてそのまま入れる
         val domainAttribute = parsed.domain?.trimStart('.')?.lowercase()?.ifEmpty { null }
         if (domainAttribute != null && !domainMatches(host, domainAttribute)) return
+
+        // Max-Age 属性は 0 以下なら即座に期限切れ (RFC 6265 5.2.2)。HttpCookie は -1 を「指定なし」と区別しないので自前で読む。
+        // Max-Age が無ければ Expires から HttpCookie.parse が決めた maxAge を使う (過去の日時なら 0、無ければ -1)
+        val maxAge = maxAgeAttribute ?: parsed.maxAge.takeIf { it >= 0 }
+        val expiresAt = when {
+            maxAge == null -> null
+            maxAge <= 0 -> now
+            maxAge > (Long.MAX_VALUE - now) / 1000 -> Long.MAX_VALUE
+            else -> now + maxAge * 1000
+        }
 
         val cookie = ScienceTokyoPortalCookie(
             name = parsed.name,
@@ -50,6 +61,7 @@ internal class CookieStore(
             path = parsed.path?.takeIf { it.startsWith("/") } ?: defaultPath(url),
             secure = parsed.secure,
             httpOnly = parsed.isHttpOnly,
+            expiresAt = expiresAt,
         )
 
         val old = entries.firstOrNull {
@@ -57,21 +69,10 @@ internal class CookieStore(
         }
         if (old != null) entries.remove(old)
 
-        // Max-Age=0 や過去の Expires (HttpCookie.parse で maxAge が 0 になる) は同じ Cookie を消すだけ
-        val maxAge = parsed.maxAge
-        if (maxAge == 0L || maxAge < -1L) return
+        // 期限切れの Cookie は同じ Cookie を消すだけ
+        if (expiresAt != null && expiresAt <= now) return
 
-        entries.add(
-            Entry(
-                cookie = cookie,
-                expiresAt = when {
-                    maxAge < 0 -> null
-                    maxAge > (Long.MAX_VALUE - now) / 1000 -> null
-                    else -> now + maxAge * 1000
-                },
-                creationOrder = old?.creationOrder ?: nextCreationOrder++,
-            )
-        )
+        entries.add(Entry(cookie, creationOrder = old?.creationOrder ?: nextCreationOrder++))
     }
 
     /** [url] へのリクエストに付ける Cookie。path の長いものから、同じ長さなら先に受け取ったものから並べる */
@@ -93,7 +94,7 @@ internal class CookieStore(
 
     private fun removeExpired() {
         val now = currentTimeMillis()
-        entries.removeAll { entry -> entry.expiresAt?.let { it <= now } ?: false }
+        entries.removeAll { entry -> entry.cookie.expiresAt?.let { it <= now } ?: false }
     }
 }
 
@@ -107,12 +108,14 @@ internal fun ScienceTokyoPortalCookie.matches(url: URL): Boolean {
 
 /**
  * [ScienceTokyoPortal.currentCookies] 用の [HttpCookie]。
- * 以前と同じくホストだけの Cookie は domain にホスト名を入れ、Domain 属性のある Cookie は `.` を付けて区別する。
+ * 以前と同じくホストだけの Cookie でも domain に受け取ったホスト名を入れるので、ホストだけの Cookie かは区別できない。
  * 有効期限は引き継がない。
  */
 internal fun ScienceTokyoPortalCookie.toHttpCookie(): HttpCookie =
     HttpCookie(name, value).also {
-        it.domain = if (hostOnly) domain else ".$domain"
+        // HttpCookie は既定で RFC 2965 (version 1) になり、toString() が `name="value";$Path=...` になる
+        it.version = 0
+        it.domain = domain
         it.path = path
         it.secure = secure
         it.isHttpOnly = httpOnly
@@ -138,6 +141,14 @@ internal fun defaultPath(url: URL): String {
     val lastSlash = path.lastIndexOf('/')
     return if (lastSlash == 0) "/" else path.substring(0, lastSlash)
 }
+
+/** Set-Cookie ヘッダの Max-Age 属性の値。無いか数でなければ null */
+internal fun maxAgeAttribute(setCookieHeader: String): Long? =
+    setCookieHeader.split(';')
+        .drop(1)
+        .map { it.split('=', limit = 2) }
+        .lastOrNull { it.size == 2 && it[0].trim().equals("Max-Age", ignoreCase = true) }
+        ?.get(1)?.trim()?.toLongOrNull()
 
 private fun isIPAddress(host: String): Boolean =
     host.contains(':') || host.matches(Regex("""\d{1,3}(\.\d{1,3}){3}"""))

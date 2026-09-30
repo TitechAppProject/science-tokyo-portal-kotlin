@@ -27,6 +27,7 @@ class CookieStoreTest {
                     path = "/",
                     secure = true,
                     httpOnly = true,
+                    expiresAt = null,
                 )
             ),
             store.all()
@@ -117,9 +118,35 @@ class CookieStoreTest {
     }
 
     @Test
+    fun `Max-Age が 0 以下なら -1 でも同じ Cookie を消す`() {
+        store.store(listOf("A=1; Path=/", "B=1; Path=/"), URL("https://isct.ex-tic.com/"))
+        store.store(listOf("A=; Path=/; Max-Age=-1"), URL("https://isct.ex-tic.com/"))
+
+        assertEquals(listOf("B=1"), names("https://isct.ex-tic.com/"))
+    }
+
+    @Test
+    fun `Max-Age は Expires より優先する`() {
+        store.store(
+            listOf("A=1; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=10"),
+            URL("https://isct.ex-tic.com/")
+        )
+
+        assertEquals(listOf(now + 10_000), store.all().map { it.expiresAt })
+    }
+
+    @Test
+    fun `同じ Cookie が 1 つのレスポンスに複数あれば後のものを使う`() {
+        store.store(listOf("A=1; Path=/", "A=2; Path=/"), URL("https://isct.ex-tic.com/"))
+
+        assertEquals(listOf("A=2"), names("https://isct.ex-tic.com/"))
+    }
+
+    @Test
     fun `期限の切れた Cookie は送らない`() {
         store.store(listOf("A=1; Path=/; Max-Age=10", "B=1; Path=/"), URL("https://isct.ex-tic.com/"))
 
+        assertEquals(listOf(now + 10_000, null), store.all().map { it.expiresAt })
         now += 9_000
         assertEquals(listOf("A=1", "B=1"), names("https://isct.ex-tic.com/"))
         now += 1_000
@@ -172,7 +199,15 @@ class CookieStoreTest {
     }
 
     @Test
-    fun `toHttpCookie はホストだけの Cookie とそれ以外を domain の先頭の点で区別する`() {
+    fun maxAgeAttribute() {
+        assertEquals(10L, maxAgeAttribute("A=1; Path=/; max-age = 10"))
+        assertEquals(-1L, maxAgeAttribute("A=1; Max-Age=-1"))
+        assertEquals(null, maxAgeAttribute("A=1; Path=/"))
+        assertEquals(null, maxAgeAttribute("Max-Age=1; Path=/"))
+    }
+
+    @Test
+    fun `toHttpCookie は以前と同じ形で返す`() {
         store.store(listOf("A=1; Path=/; HttpOnly"), URL("https://isct.ex-tic.com/"))
         store.store(listOf("B=1; Domain=isct.ac.jp; Path=/2025/; Secure"), URL("https://lms.s.isct.ac.jp/2025/"))
 
@@ -180,7 +215,8 @@ class CookieStoreTest {
         assertEquals("isct.ex-tic.com", a.domain)
         assertEquals("/", a.path)
         assertTrue(a.isHttpOnly)
-        assertEquals(".isct.ac.jp", b.domain)
+        assertEquals("A=1", a.toString())
+        assertEquals("isct.ac.jp", b.domain)
         assertEquals("/2025/", b.path)
         assertTrue(b.secure)
     }

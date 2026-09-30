@@ -180,6 +180,7 @@ class ScienceTokyoPortalTest {
             path = path,
             secure = true,
             httpOnly = true,
+            expiresAt = null,
         )
 
     @Test
@@ -195,6 +196,11 @@ class ScienceTokyoPortalTest {
     @Test
     fun `validateLMSPage - MoodleSession cookie for another host`() {
         assertFalse(portal.validateLMSPage(listOf(lmsCookie("MoodleSession", domain = "isct.ex-tic.com"))))
+    }
+
+    @Test
+    fun `validateLMSPage - MoodleSession cookie for root path`() {
+        assertTrue(portal.validateLMSPage(listOf(lmsCookie("MoodleSession", path = "/"))))
     }
 
     @Test
