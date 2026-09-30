@@ -205,19 +205,4 @@ class CookieStoreTest {
         assertEquals(null, maxAgeAttribute("A=1; Path=/"))
         assertEquals(null, maxAgeAttribute("Max-Age=1; Path=/"))
     }
-
-    @Test
-    fun `toHttpCookie は以前と同じ形で返す`() {
-        store.store(listOf("A=1; Path=/; HttpOnly"), URL("https://isct.ex-tic.com/"))
-        store.store(listOf("B=1; Domain=isct.ac.jp; Path=/2025/; Secure"), URL("https://lms.s.isct.ac.jp/2025/"))
-
-        val (a, b) = store.all().map { it.toHttpCookie() }
-        assertEquals("isct.ex-tic.com", a.domain)
-        assertEquals("/", a.path)
-        assertTrue(a.isHttpOnly)
-        assertEquals("A=1", a.toString())
-        assertEquals("isct.ac.jp", b.domain)
-        assertEquals("/2025/", b.path)
-        assertTrue(b.secure)
-    }
 }

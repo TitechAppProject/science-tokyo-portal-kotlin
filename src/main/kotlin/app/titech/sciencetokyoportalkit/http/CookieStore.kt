@@ -106,21 +106,6 @@ internal fun ScienceTokyoPortalCookie.matches(url: URL): Boolean {
     return domainOk && pathMatches(url.path.ifEmpty { "/" }, path) && secureOk
 }
 
-/**
- * [ScienceTokyoPortal.currentCookies] 用の [HttpCookie]。
- * 以前と同じくホストだけの Cookie でも domain に受け取ったホスト名を入れるので、ホストだけの Cookie かは区別できない。
- * 有効期限は引き継がない。
- */
-internal fun ScienceTokyoPortalCookie.toHttpCookie(): HttpCookie =
-    HttpCookie(name, value).also {
-        // HttpCookie は既定で RFC 2965 (version 1) になり、toString() が `name="value";$Path=...` になる
-        it.version = 0
-        it.domain = domain
-        it.path = path
-        it.secure = secure
-        it.isHttpOnly = httpOnly
-    }
-
 /** RFC 6265 5.1.3。[host] と [domain] は小文字で、[domain] は先頭の `.` を除いたもの */
 internal fun domainMatches(host: String, domain: String): Boolean {
     if (host == domain) return true

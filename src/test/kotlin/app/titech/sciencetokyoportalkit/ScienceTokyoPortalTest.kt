@@ -2,7 +2,6 @@ package app.titech.sciencetokyoportalkit
 
 import app.titech.sciencetokyoportalkit.model.*
 import org.junit.jupiter.api.Test
-import java.net.HttpCookie
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -208,18 +207,6 @@ class ScienceTokyoPortalTest {
         assertFalse(portal.validateLMSPage(listOf(lmsCookie("MoodleSession", path = "/2024/"))))
     }
 
-    @Suppress("DEPRECATION")
-    @Test
-    fun `validateLMSPage - HttpCookie`() {
-        val cookies = listOf(
-            HttpCookie("MoodleSession", "test").apply {
-                path = "/"
-                domain = "lms.s.isct.ac.jp"
-            }
-        )
-        assertTrue(portal.validateLMSPage(cookies))
-    }
-    
     @Test
     fun `validateLMSRedirectPage - valid page`() {
         val html = this::class.java.getResource("/LmsRedirectPage.html")?.readText() ?: ""
