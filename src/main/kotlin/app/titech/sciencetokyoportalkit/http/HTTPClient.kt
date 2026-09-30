@@ -1,21 +1,20 @@
 package app.titech.sciencetokyoportalkit.http
 
+import app.titech.sciencetokyoportalkit.model.ScienceTokyoPortalCookie
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.io.PrintStream
-import java.net.HttpCookie
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
 import java.util.zip.GZIPInputStream
-import kotlin.collections.flatMap
 
 interface HTTPClient {
     suspend fun send(request: HTTPRequest): HTTPResponse
-    fun cookies(): List<HttpCookie>
+    fun cookies(): List<ScienceTokyoPortalCookie>
 }
 
 data class HTTPResponse(
@@ -27,11 +26,11 @@ data class HTTPResponse(
 class HTTPClientImpl(
     private val userAgent: String
 ) : HTTPClient {
-    private var cookies = mutableSetOf<HttpCookie>()
+    private val cookieStore = CookieStore()
 
     override suspend fun send(request: HTTPRequest): HTTPResponse = withContext(Dispatchers.IO) {
         val url = URL(request.url)
-        var connection = generateUrlConnection(url, request.method.value, request.headerFields, cookies)
+        var connection = generateUrlConnection(url, request.method.value, request.headerFields)
 
         do {
             println("RequestURL: " + connection.url.toString())
@@ -55,24 +54,7 @@ class HTTPClientImpl(
             println("responseHeaders: " + connection.headerFields.toString())
             println("responseCode: " + connection.responseCode.toString())
 
-            val setCookie = connection.headerFields["Set-Cookie"] ?: connection.headerFields["Set-cookie"]
-            setCookie
-                ?.flatMap {
-                    HttpCookie.parse(it)
-                }?.filter {
-                    !it.hasExpired()
-                }?.forEach { cookie ->
-                    // FIXME: n^2
-                    if (cookie.domain == null) {
-                        cookie.domain = connection.url.host
-                    }
-                    val sameNameCookie = cookies.firstOrNull { it.name == cookie.name }
-
-                    if (sameNameCookie != null) {
-                        cookies.remove(sameNameCookie)
-                    }
-                    cookies.add(cookie)
-                }
+            cookieStore.store(setCookieHeaders(connection), connection.url)
 
             var needRedirect = false
             if (connection.responseCode in 300..399) {
@@ -84,7 +66,7 @@ class HTTPClientImpl(
                         else -> URL(location)
                     }
                     connection =
-                        generateUrlConnection(locationURL, "GET", request.headerFields, cookies)
+                        generateUrlConnection(locationURL, "GET", request.headerFields)
                     needRedirect = true
                 } catch (e: Exception) {
                     needRedirect = false
@@ -121,7 +103,18 @@ class HTTPClientImpl(
 
     }
 
-    override fun cookies(): List<HttpCookie> = cookies.toList()
+    override fun cookies(): List<ScienceTokyoPortalCookie> = cookieStore.all()
+
+    /// Set-Cookie ヘッダの値を受け取った順に返す。
+    /// JDK 17 までの headerFields は同じ名前のヘッダの値を逆順で返すので、番号で 1 つずつ読む。
+    /// 0 番目はステータス行 (キーは null)。
+    private fun setCookieHeaders(connection: HttpURLConnection): List<String> =
+        generateSequence(0) { it + 1 }
+            .map { connection.getHeaderFieldKey(it) to connection.getHeaderField(it) }
+            .takeWhile { (_, value) -> value != null }
+            .filter { (key, _) -> key != null && key.equals("Set-Cookie", ignoreCase = true) }
+            .mapNotNull { (_, value) -> value }
+            .toList()
 
     /// Accept-Encodingを明示的に指定しているため、gzipの透過的な解凍は行われない。
     /// Content-Encodingを見て自前で解凍する。
@@ -138,18 +131,20 @@ class HTTPClientImpl(
     private fun generateUrlConnection(
         url: URL,
         httpMethod: String,
-        headerFields: Map<String, String>?,
-        cookies: Set<HttpCookie>
+        headerFields: Map<String, String>?
     ): HttpURLConnection {
         val connection = url.openConnection() as HttpURLConnection
 
         headerFields?.forEach {
             connection.setRequestProperty(it.key, it.value)
         }
-        connection.setRequestProperty(
-            "Cookie",
-            cookies.joinToString("; ") { "${it.name}=${it.value}" }
-        )
+        val cookies = cookieStore.cookiesFor(url)
+        if (cookies.isNotEmpty()) {
+            connection.setRequestProperty(
+                "Cookie",
+                cookies.joinToString("; ") { "${it.name}=${it.value}" }
+            )
+        }
         if (headerFields?.containsKey("User-Agent") == false) {
             connection.setRequestProperty(
                 "User-Agent",

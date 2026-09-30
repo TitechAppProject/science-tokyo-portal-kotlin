@@ -2,7 +2,6 @@ package app.titech.sciencetokyoportalkit
 
 import app.titech.sciencetokyoportalkit.model.*
 import org.junit.jupiter.api.Test
-import java.net.HttpCookie
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -171,28 +170,43 @@ class ScienceTokyoPortalTest {
         assertFalse(portal.validateResourceListPage(html))
     }
     
+    private fun lmsCookie(name: String, domain: String = "lms.s.isct.ac.jp", path: String = "/2025/") =
+        ScienceTokyoPortalCookie(
+            name = name,
+            value = "test",
+            domain = domain,
+            hostOnly = true,
+            path = path,
+            secure = true,
+            httpOnly = true,
+            expiresAt = null,
+        )
+
     @Test
     fun `validateLMSPage - has MoodleSession cookie`() {
-        val cookies = listOf(
-            HttpCookie("MoodleSession", "test").apply {
-                path = "/"
-                domain = "lms.s.isct.ac.jp"
-            }
-        )
-        assertTrue(portal.validateLMSPage(cookies))
+        assertTrue(portal.validateLMSPage(listOf(lmsCookie("MoodleSession"))))
     }
     
     @Test
     fun `validateLMSPage - no MoodleSession cookie`() {
-        val cookies = listOf(
-            HttpCookie("OtherCookie", "test").apply {
-                path = "/"
-                domain = "lms.s.isct.ac.jp"
-            }
-        )
-        assertFalse(portal.validateLMSPage(cookies))
+        assertFalse(portal.validateLMSPage(listOf(lmsCookie("OtherCookie"))))
     }
-    
+
+    @Test
+    fun `validateLMSPage - MoodleSession cookie for another host`() {
+        assertFalse(portal.validateLMSPage(listOf(lmsCookie("MoodleSession", domain = "isct.ex-tic.com"))))
+    }
+
+    @Test
+    fun `validateLMSPage - MoodleSession cookie for root path`() {
+        assertTrue(portal.validateLMSPage(listOf(lmsCookie("MoodleSession", path = "/"))))
+    }
+
+    @Test
+    fun `validateLMSPage - MoodleSession cookie for another path`() {
+        assertFalse(portal.validateLMSPage(listOf(lmsCookie("MoodleSession", path = "/2024/"))))
+    }
+
     @Test
     fun `validateLMSRedirectPage - valid page`() {
         val html = this::class.java.getResource("/LmsRedirectPage.html")?.readText() ?: ""

@@ -6,7 +6,7 @@ import app.titech.sciencetokyoportalkit.model.*
 import app.titech.sciencetokyoportalkit.utility.calculateTOTP
 import kotlinx.serialization.json.*
 import org.jsoup.Jsoup
-import java.net.HttpCookie
+import java.net.URL
 import java.util.*
 
 class ScienceTokyoPortal(
@@ -163,7 +163,11 @@ class ScienceTokyoPortal(
         return validateSubmitStatusCode(passwordPageSubmitStatusCode)
     }
 
-    fun currentCookies(): List<HttpCookie> = httpClient.cookies()
+    /**
+     * ログインで受け取った Cookie。
+     * Set-Cookie に Domain 属性が無かった (受け取ったホストだけの) Cookie かは [ScienceTokyoPortalCookie.hostOnly] で分かる。
+     */
+    fun currentPortalCookies(): List<ScienceTokyoPortalCookie> = httpClient.cookies()
     
     private suspend fun fetchUserNamePage(): String {
         val request = UserNamePageRequest()
@@ -306,10 +310,12 @@ class ScienceTokyoPortal(
         return bodyHtml.contains("Account") || bodyHtml.contains("アカウント")
     }
     
-    fun validateLMSPage(cookies: List<HttpCookie>): Boolean {
-        return cookies.any { it.name == "MoodleSession" }
+    /** LMS に送る MoodleSession の Cookie があるか */
+    fun validateLMSPage(cookies: List<ScienceTokyoPortalCookie>): Boolean {
+        val lmsURL = URL(LMSBaseURL.origin)
+        return cookies.any { it.name == "MoodleSession" && it.matches(lmsURL) }
     }
-    
+
     fun detectPolicyError(html: String): Boolean {
         val doc = Jsoup.parse(html)
         val title = doc.title()
