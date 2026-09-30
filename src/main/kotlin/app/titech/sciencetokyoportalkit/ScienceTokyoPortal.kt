@@ -7,6 +7,7 @@ import app.titech.sciencetokyoportalkit.utility.calculateTOTP
 import kotlinx.serialization.json.*
 import org.jsoup.Jsoup
 import java.net.HttpCookie
+import java.net.URL
 import java.util.*
 
 class ScienceTokyoPortal(
@@ -163,7 +164,22 @@ class ScienceTokyoPortal(
         return validateSubmitStatusCode(passwordPageSubmitStatusCode)
     }
 
-    fun currentCookies(): List<HttpCookie> = httpClient.cookies()
+    /**
+     * ログインで受け取った Cookie。
+     * Set-Cookie に Domain 属性が無かった (受け取ったホストだけの) Cookie かは [ScienceTokyoPortalCookie.hostOnly] で分かる。
+     */
+    fun currentPortalCookies(): List<ScienceTokyoPortalCookie> = httpClient.cookies()
+
+    /**
+     * ログインで受け取った Cookie。
+     * ホストだけの Cookie は domain に受け取ったホスト名を、Domain 属性のある Cookie は domain に `.` 付きの値を入れる。
+     * 有効期限は入らない。
+     */
+    @Deprecated(
+        "ホストだけの Cookie かを hostOnly で判別できる currentPortalCookies() を使う",
+        ReplaceWith("currentPortalCookies()")
+    )
+    fun currentCookies(): List<HttpCookie> = httpClient.cookies().map { it.toHttpCookie() }
     
     private suspend fun fetchUserNamePage(): String {
         val request = UserNamePageRequest()
@@ -306,6 +322,14 @@ class ScienceTokyoPortal(
         return bodyHtml.contains("Account") || bodyHtml.contains("アカウント")
     }
     
+    /** LMS に送る MoodleSession の Cookie があるか */
+    @JvmName("validateLMSPageWithPortalCookies")
+    fun validateLMSPage(cookies: List<ScienceTokyoPortalCookie>): Boolean {
+        val lmsURL = URL(LMSBaseURL.origin)
+        return cookies.any { it.name == "MoodleSession" && it.matches(lmsURL) }
+    }
+
+    @Deprecated("送り先の LMS に合う Cookie かを見る validateLMSPage(List<ScienceTokyoPortalCookie>) を使う")
     fun validateLMSPage(cookies: List<HttpCookie>): Boolean {
         return cookies.any { it.name == "MoodleSession" }
     }

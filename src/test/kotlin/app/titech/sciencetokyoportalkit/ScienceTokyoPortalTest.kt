@@ -171,8 +171,40 @@ class ScienceTokyoPortalTest {
         assertFalse(portal.validateResourceListPage(html))
     }
     
+    private fun lmsCookie(name: String, domain: String = "lms.s.isct.ac.jp", path: String = "/2025/") =
+        ScienceTokyoPortalCookie(
+            name = name,
+            value = "test",
+            domain = domain,
+            hostOnly = true,
+            path = path,
+            secure = true,
+            httpOnly = true,
+        )
+
     @Test
     fun `validateLMSPage - has MoodleSession cookie`() {
+        assertTrue(portal.validateLMSPage(listOf(lmsCookie("MoodleSession"))))
+    }
+    
+    @Test
+    fun `validateLMSPage - no MoodleSession cookie`() {
+        assertFalse(portal.validateLMSPage(listOf(lmsCookie("OtherCookie"))))
+    }
+
+    @Test
+    fun `validateLMSPage - MoodleSession cookie for another host`() {
+        assertFalse(portal.validateLMSPage(listOf(lmsCookie("MoodleSession", domain = "isct.ex-tic.com"))))
+    }
+
+    @Test
+    fun `validateLMSPage - MoodleSession cookie for another path`() {
+        assertFalse(portal.validateLMSPage(listOf(lmsCookie("MoodleSession", path = "/2024/"))))
+    }
+
+    @Suppress("DEPRECATION")
+    @Test
+    fun `validateLMSPage - HttpCookie`() {
         val cookies = listOf(
             HttpCookie("MoodleSession", "test").apply {
                 path = "/"
@@ -180,17 +212,6 @@ class ScienceTokyoPortalTest {
             }
         )
         assertTrue(portal.validateLMSPage(cookies))
-    }
-    
-    @Test
-    fun `validateLMSPage - no MoodleSession cookie`() {
-        val cookies = listOf(
-            HttpCookie("OtherCookie", "test").apply {
-                path = "/"
-                domain = "lms.s.isct.ac.jp"
-            }
-        )
-        assertFalse(portal.validateLMSPage(cookies))
     }
     
     @Test
