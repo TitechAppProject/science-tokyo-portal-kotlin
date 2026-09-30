@@ -53,9 +53,10 @@ class HTTPClientImplTest {
         assertEquals("http://127.0.0.1:$port/echo", redirected.responseUrl)
         assertEquals("", redirected.html)
 
+        // JDK 17 までの HttpURLConnection は同じヘッダの値を逆順で返すので、受け取った順は比べない
         assertEquals(
-            listOf("SESSION" to "/auth", "ROOT" to "/", "SECURE" to "/"),
-            client.cookies().map { it.name to it.path }
+            setOf("SESSION" to "/auth", "ROOT" to "/", "SECURE" to "/"),
+            client.cookies().map { it.name to it.path }.toSet()
         )
         assertEquals(listOf(true, true, true), client.cookies().map { it.hostOnly })
         assertEquals("SESSION=host-only; ROOT=1", client.send(Get("http://localhost:$port/auth/echo")).html)
